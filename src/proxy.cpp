@@ -22,6 +22,8 @@ void pipeHandler(int dummy) {
 
 void handleConnection(ClientSocket csock) {
     cout << "Haha!! Lol" << endl;
+    vector<char> buffer((BUFSIZE+5)*sizeof(char));
+    csock.readIntoBuffer(buffer);
 }
 
 int main(int argc, char * argv[]) {
