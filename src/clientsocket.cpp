@@ -12,8 +12,8 @@ void ClientSocket::closeSocket() {
 }
 
 // Reads text from socket into buffer
-int ClientSocket::readIntoBuffer(std::vector<char> &buffer) {
-  int n = recv(fd, &buffer[0], BUFSIZE, 0);
+int ClientSocket::readIntoBuffer(std::vector<char> &buffer, int lenUsed) {
+  int n = recv(fd, &buffer[lenUsed], BUFSIZE-lenUsed, 0);
   if (n < 0) error("Error while read message from client socket");
   return n;
 }

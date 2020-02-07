@@ -17,7 +17,6 @@
 #ifndef PROXY_PARSE
 #define PROXY_PARSE
 
-#define DEBUG 1
 
 /* 
    ParsedRequest objects are created from parsing a buffer containing a HTTP
@@ -55,6 +54,8 @@ struct ParsedHeader {
      size_t valuelen;
 };
 
+int ParsedHeader_printHeaders(struct ParsedRequest * pr, char * buf,
+                              size_t len);
 
 /* Create an empty parsing object to be used exactly once for parsing a single
  * request buffer */
