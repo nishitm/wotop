@@ -26,9 +26,9 @@ size_t ParsedRequest_requestLineLen(struct ParsedRequest *pr);
 void debug(const char * format, ...) {
      va_list args;
 #ifdef DEBUG_PROXY
-      va_start(args, format);
-      vfprintf(stderr, format, args);
-      va_end(args);
+     va_start(args, format);
+     vfprintf(stderr, format, args);
+     va_end(args);
 #endif
 }
 
@@ -337,11 +337,13 @@ size_t ParsedRequest_totalLen(struct ParsedRequest *pr)
 
 /*
    Parse request buffer
+
    Parameters:
    parse: ptr to a newly created ParsedRequest object
    buf: ptr to the buffer containing the request (need not be NUL terminated)
    and the trailing \r\n\r\n
    buflen: length of the buffer including the trailing \r\n\r\n
+
    Return values:
    -1: failure
    0: success
@@ -599,3 +601,4 @@ int ParsedRequest_printRequestLine(struct ParsedRequest *pr,
      *tmp = current-buf;
      return 0;
 }
+

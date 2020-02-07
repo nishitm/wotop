@@ -62,3 +62,4 @@ void ServerSocket::connectToClient(void (*connectionCallback)(ClientSocket&)) {
 void ServerSocket::closeSocket() {
     close(mainSocketFd);
 }
+

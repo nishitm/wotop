@@ -22,9 +22,9 @@ void pipeHandler(int dummy) {
 }
 
 void handleConnection(ClientSocket& csock) {
-    int n=0;
+    int n = 0;
     vector<char> buffer((BUFSIZE+5)*sizeof(char));
-        char timebuf[80];
+    char timebuf[80];
     fillTimeBuffer(timebuf);
 
     do {
@@ -54,6 +54,7 @@ void handleConnection(ClientSocket& csock) {
     cout << parsedReq->path << endl;
     cout << "Host: " << parsedReq->host << endl;
 #endif
+
     WebSocket wreq = WebSocket(parsedReq->host, 80);
     n = wreq.sendRequest(parsedReq);
     if (n < 0) {
@@ -77,6 +78,7 @@ void handleConnection(ClientSocket& csock) {
     csock.writeBufferToSocket(buffer, n);
 
     wreq.closeSocket();
+
 }
 
 int main(int argc, char * argv[]) {

@@ -24,11 +24,12 @@ WebSocket::WebSocket(char *host, int portNumber) {
         error("Cannot connect to remote server");
 }
 
-void WebSocket::sendRequest(struct ParsedHeader *pr) {
+int WebSocket::sendRequest(struct ParsedRequest *pr) {
     ParsedHeader_remove(pr, "Connection");
     ParsedHeader_remove(pr, "connection");
     ParsedHeader_remove(pr, "Host");
     int status = 0;
+
     n = 0;
     n += sprintf(webbuffer+n, "GET %s HTTP/1.0\r\n", pr->path);
 
@@ -46,6 +47,7 @@ void WebSocket::sendRequest(struct ParsedHeader *pr) {
     }
     n += sprintf(webbuffer+n, "Host: %s\r\n", pr->host);
     n += sprintf(webbuffer+n, "Connection: close\r\n\r\n");
+
     send(fd, webbuffer, n, 0);
 
 #ifdef DEBUG
@@ -62,3 +64,4 @@ int WebSocket::recvOnSocket(std::vector<char> &buffer) {
 void WebSocket::closeSocket() {
     close(fd);
 }
+
