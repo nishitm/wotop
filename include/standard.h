@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/select.h>
+#include <sys/fcntl.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
@@ -19,6 +21,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 #define BUFSIZE 65535
