@@ -25,6 +25,8 @@ void pipeHandler(int dummy) {
 
 void exchangeData(ProxySocket& sock) {
     vector<char> buffer((BUFSIZE+5)*sizeof(char));
+    ProxySocket outsock = ProxySocket(remoteUrl, remotePort, PLAIN);
+
     bool areTheyStillThere = true;
 
     int a;
