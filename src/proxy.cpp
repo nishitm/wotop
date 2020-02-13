@@ -9,6 +9,7 @@ using namespace std;
 ServerSocket mainSocket;
 char *remoteUrl;
 int remotePort;
+Modes mode = CLIENT;
 
 // For closing the sockets safely when Ctrl+C SIGINT is received
 void intHandler(int dummy) {
@@ -25,9 +26,10 @@ void pipeHandler(int dummy) {
 
 void exchangeData(ProxySocket& sock) {
     vector<char> buffer((BUFSIZE+5)*sizeof(char));
-    ProxySocket outsock = ProxySocket(remoteUrl, remotePort, PLAIN);
-
+    ProxySocket outsock = ProxySocket(remoteUrl, remotePort,
+                                      mode==CLIENT?HTTP:PLAIN);
     bool areTheyStillThere = true;
+    setNonBlocking(sock.fd);
 
     int a;
     do {
@@ -40,6 +42,7 @@ void exchangeData(ProxySocket& sock) {
             logger << "Got nothing from remote";
         } else {
             sock.sendFromSocket(buffer, 0, a);
+            logger << "Sent " << a << " bytes from remote to local";
         }
         a = sock.recvFromSocket(buffer, 0);
         if (a == -1) {
@@ -50,6 +53,7 @@ void exchangeData(ProxySocket& sock) {
             logger << "Got nothing from client";
         } else {
             outsock.sendFromSocket(buffer, 0, a);
+            logger << "Sent " << a << " bytes from local to remote";
         }
 
     } while (areTheyStillThere);
@@ -64,11 +68,20 @@ int main(int argc, char * argv[]) {
     signal(SIGCHLD, SIG_IGN);
 
     // CLI argument parsing
-    if (argc != 4)
+    if (argc != 4 && argc != 5)
         error("Usage format: ./wotop <local port> <remote url> <remotePort>");
     portNumber = atoi(argv[1]);
     remoteUrl = argv[2];
     remotePort = atoi(argv[3]);
+
+    if (argc == 5) {
+        if (strcmp(argv[4], "SERVER") == 0) {
+            mode = SERVER;
+            info("Running as server");
+        } else {
+            info("Running as client");
+        }
+    }
 
     // Class ServerSocket handles the connection logic
     mainSocket.listenOnPort(portNumber);
@@ -77,7 +90,7 @@ int main(int argc, char * argv[]) {
     while (1) {
         // Accept connections and create a class instance
         // Forks as needed
-        mainSocket.connectToSocket(exchangeData);
+        mainSocket.connectToSocket(exchangeData, mode);
     }
     return 0;
 }
