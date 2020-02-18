@@ -37,6 +37,3 @@ $(OBJ)/%.o: $(SRC)/%.cpp
 clean:
 	rm -rf $(OBJ)
 	rm -f wotop
-
-tar:
-	tar -cvzf wotop.tgz src include README Makefile
