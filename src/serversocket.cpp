@@ -21,11 +21,11 @@ void ServerSocket::listenOnPort(int portNumber) {
     /* Binding the newly created socket to the server address and port */
     if (bind(mainSocketFd, (struct sockaddr *)&server, sizeof(server)) < 0)
         error("Could not bind to socket");
-    listen(mainSocketFd, 30000);
+    listen(mainSocketFd, 1000);
 }
 
 void ServerSocket::connectToSocket(void (*connectionCallback)(ProxySocket&),
-                                   Modes mode) {
+                                   Mode mode) {
     int c = accept(mainSocketFd, (struct sockaddr *) &client, &clientLen);
     if (c < 0) return;
     //setNonBlocking(c);
