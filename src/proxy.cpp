@@ -1,7 +1,7 @@
 #include "standard.h"
 #include "utils.h"
 #include "serversocket.h"
-#include "logger.cpp"
+#include "logger.h"
 #include "proxysocket.h"
 
 using namespace std;
@@ -13,7 +13,7 @@ Mode mode = CLIENT;
 
 // For closing the sockets safely when Ctrl+C SIGINT is received
 void intHandler(int dummy) {
-  info("\nClosing socket\n");
+  logger(INFO) << "Closing socket";
   mainSocket.closeSocket();
   exit(0);
 }
@@ -21,7 +21,7 @@ void intHandler(int dummy) {
 // To ignore SIGPIPE being carried over to the parent
 // When client closes pipe
 void pipeHandler(int dummy) {
-  info("Connection closed due to SIGPIPE");
+  logger(INFO) << "Connection closed due to SIGPIPE";
 }
 
 void exchangeData(ProxySocket& sock) {
@@ -48,11 +48,11 @@ void exchangeData(ProxySocket& sock) {
             // Connection has been broken
             return;
         } else if (a == 0) {
-            logger << "Got nothing from remote";
+            logger(DEBUG) << "Got nothing from remote";
         } else {
             // TODO If sock is HTTP, don't send till you get a request
             sock.sendFromSocket(outBuffer, b, a);
-            logger << "Sent " << a << " bytes from remote to local";
+            logger(DEBUG) << "Sent " << a << " bytes from remote to local";
         }
         outBuffer[0] = 0;       // To allow sane logging
 
@@ -64,11 +64,11 @@ void exchangeData(ProxySocket& sock) {
             // Connection has been broken
             return;
         } else if (a == 0) {
-            logger << "Got nothing from client";
+            logger(DEBUG) << "Got nothing from client";
             // TODO Send empty HTTP requests if outsock is HTTP
         } else {
             outsock.sendFromSocket(inpBuffer, b, a);
-            logger << "Sent " << a << " bytes from local to remote";
+            logger(DEBUG) << "Sent " << a << " bytes from local to remote";
         }
         inpBuffer[0] = 0;    // To allow sane logging
         usleep(100000);
@@ -85,8 +85,10 @@ int main(int argc, char * argv[]) {
     signal(SIGCHLD, SIG_IGN);
 
     // CLI argument parsing
-    if (argc != 4 && argc != 5)
-        error("Usage format: ./wotop <local port> <remote url> <remotePort>");
+    if (argc != 4 && argc != 5) {
+        logger(ERROR) << "Usage format: ./wotop <local port> <remote url> <remotePort>";
+        exit(0);
+    }
     portNumber = atoi(argv[1]);
     remoteUrl = argv[2];
     remotePort = atoi(argv[3]);
@@ -94,9 +96,9 @@ int main(int argc, char * argv[]) {
     if (argc == 5) {
         if (strcmp(argv[4], "SERVER") == 0) {
             mode = SERVER;
-            info("Running as server");
+            logger(INFO) << "Running as server";
         } else {
-            info("Running as client");
+            logger(INFO) << "Running as client";
         }
     }
 
