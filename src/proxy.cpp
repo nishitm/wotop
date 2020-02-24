@@ -36,6 +36,13 @@ void exchangeData(ProxySocket& sock) {
     ProxySocket outsock = ProxySocket(remoteUrl, remotePort,
                                       mode==CLIENT?HTTP:PLAIN);
     int a, b;
+
+    if (mode == CLIENT) {
+        outsock.sendHelloMessage();
+    } else {
+        sock.receiveHelloMessage();
+    }
+
     do {
         // @a stores the number of bytes in the message
         // @b is passed by reference
