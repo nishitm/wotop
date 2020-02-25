@@ -29,13 +29,16 @@ void exchangeData(ProxySocket& sock) {
     vector<char> outBuffer((BUFSIZE+5)*sizeof(char));
     vector<char> inpBuffer((BUFSIZE+5)*sizeof(char));
 
+    int failuresOut = 0;
+    int failuresIn = 0;
+
     // This socket is HTTP for clients
     // but PLAIN for the server process
     // Server process talks to the SSH server
     // But Client process talks to the evil proxy
     ProxySocket outsock = ProxySocket(remoteUrl, remotePort,
                                       mode==CLIENT?HTTP:PLAIN);
-    int a, b;
+    int a, b, c;
 
     if (mode == CLIENT) {
         outsock.sendHelloMessage();
@@ -53,13 +56,18 @@ void exchangeData(ProxySocket& sock) {
         a = outsock.recvFromSocket(outBuffer, 0, b);
         if (a == -1) {
             // Connection has been broken
-            return;
+            failuresOut++;
         } else if (a == 0) {
+            failuresOut = 0;
             logger(DEBUG) << "Got nothing from remote";
         } else {
-            // TODO If sock is HTTP, don't send till you get a request
-            sock.sendFromSocket(outBuffer, b, a);
-            logger(DEBUG) << "Sent " << a << " bytes from remote to local";
+            c = sock.sendFromSocket(outBuffer, b, a);
+            if (c == -1) {
+                failuresOut++;
+            } else {
+                failuresOut = 0;
+            }
+            logger(DEBUG) << "Sent " << c << "/" << a << " bytes from remote to local";
         }
         outBuffer[0] = 0;       // To allow sane logging
 
@@ -69,18 +77,29 @@ void exchangeData(ProxySocket& sock) {
 
         if (a == -1) {
             // Connection has been broken
-            return;
+            failuresIn++;
         } else if (a == 0) {
+            failuresIn = 0;
             logger(DEBUG) << "Got nothing from client";
             // TODO Send empty HTTP requests if outsock is HTTP
         } else {
-            outsock.sendFromSocket(inpBuffer, b, a);
-            logger(DEBUG) << "Sent " << a << " bytes from local to remote";
+            c = outsock.sendFromSocket(inpBuffer, b, a);
+            if (c == -1) {
+                failuresIn++;
+            } else {
+                failuresIn = 0;
+            }
+            logger(DEBUG) << "Sent " << c << "/" << a << " bytes from local to remote";
         }
         inpBuffer[0] = 0;    // To allow sane logging
         usleep(100000);
 
-    } while (1);
+        if (failuresIn != 0 || failuresOut != 0) {
+            logger(WARN) << "Failures (input): " << failuresIn;
+            logger(WARN) << "Failures (output): " << failuresOut;
+        }
+
+    } while (failuresIn < 10 && failuresOut < 10);
 }
     
 
