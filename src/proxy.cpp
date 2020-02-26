@@ -101,11 +101,25 @@ void exchangeData(ProxySocket& sock) {
 
     } while (failuresIn < 10 && failuresOut < 10);
 }
+
+void printBanner() {
+    cout << "\n"
+     "  ██╗    ██╗ ██████╗ ████████╗ ██████╗ ██████╗ \n"
+     "  ██║    ██║██╔═══██╗╚══██╔══╝██╔═══██╗██╔══██╗\n"
+     "  ██║ █╗ ██║██║   ██║   ██║   ██║   ██║██████╔╝\n"
+     "  ██║███╗██║██║   ██║   ██║   ██║   ██║██╔═══╝ \n"
+     "  ╚███╔███╔╝╚██████╔╝   ██║   ╚██████╔╝██║     \n"
+     "   ╚══╝╚══╝  ╚═════╝    ╚═╝    ╚═════╝ ╚═╝     \n"
+     "\n"
+     "By Nishit (http://github.com/nishitm)\n"
+     "=================================================\n\n";
+}
     
 
 int main(int argc, char * argv[]) {
     int portNumber, pid;
 
+    printBanner();
     signal(SIGINT, intHandler);
     signal(SIGPIPE, pipeHandler);
     signal(SIGCHLD, SIG_IGN);
