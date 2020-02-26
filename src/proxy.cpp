@@ -4,12 +4,17 @@
 #include "logger.h"
 #include "proxysocket.h"
 
+#define SLEEPT 100000
+
 using namespace std;
 
 ServerSocket mainSocket;
 char *remoteUrl;
 int remotePort;
 Mode mode = CLIENT;
+
+volatile bool remoteToListenerOn = false;
+volatile bool listenerToRemoteOn = false;
 
 // For closing the sockets safely when Ctrl+C SIGINT is received
 void intHandler(int dummy) {
@@ -24,27 +29,20 @@ void pipeHandler(int dummy) {
   logger(INFO) << "Connection closed due to SIGPIPE";
 }
 
-void exchangeData(ProxySocket& sock) {
+struct connectionSockets {
+    ProxySocket& csock;
+    ProxySocket& outsock;
+};
 
+void *remoteToListener(void *context) {
     vector<char> outBuffer((BUFSIZE+5)*sizeof(char));
-    vector<char> inpBuffer((BUFSIZE+5)*sizeof(char));
 
     int failuresOut = 0;
-    int failuresIn = 0;
-
-    // This socket is HTTP for clients
-    // but PLAIN for the server process
-    // Server process talks to the SSH server
-    // But Client process talks to the evil proxy
-    ProxySocket outsock = ProxySocket(remoteUrl, remotePort,
-                                      mode==CLIENT?HTTP:PLAIN);
     int a, b, c;
 
-    if (mode == CLIENT) {
-        outsock.sendHelloMessage();
-    } else {
-        sock.receiveHelloMessage();
-    }
+    struct connectionSockets *ptr = (struct connectionSockets*)context;
+    ProxySocket& csock = ptr->csock;
+    ProxySocket& outsock = ptr->outsock;
 
     do {
         // @a stores the number of bytes in the message
@@ -61,7 +59,7 @@ void exchangeData(ProxySocket& sock) {
             failuresOut = 0;
             logger(DEBUG) << "Got nothing from remote";
         } else {
-            c = sock.sendFromSocket(outBuffer, b, a);
+            c = csock.sendFromSocket(outBuffer, b, a);
             if (c == -1) {
                 failuresOut++;
             } else {
@@ -70,10 +68,31 @@ void exchangeData(ProxySocket& sock) {
             logger(DEBUG) << "Sent " << c << "/" << a << " bytes from remote to local";
         }
         outBuffer[0] = 0;       // To allow sane logging
+        if (failuresOut != 0) {
+            logger(WARN, "RTL") << "Input failures: " << failuresOut;
+        }
+        usleep(SLEEPT);
+    } while (failuresOut < 10 && listenerToRemoteOn == true);
+
+    logger(WARN, "RTL") << "Exiting";
+    remoteToListenerOn = false;
+}
+
+void *listenerToRemote(void *context) {
+    vector<char> inpBuffer((BUFSIZE+5)*sizeof(char));
+    int failuresIn = 0;
+    int a, b, c;
+
+
+    struct connectionSockets *ptr = (struct connectionSockets*)context;
+    ProxySocket& csock = ptr->csock;
+    ProxySocket& outsock = ptr->outsock;
+
+    do {
 
         // @a stores number of bytes in message
         // @b is passed by reference
-        a = sock.recvFromSocket(inpBuffer, 0, b);
+        a = csock.recvFromSocket(inpBuffer, 0, b);
 
         if (a == -1) {
             // Connection has been broken
@@ -92,14 +111,54 @@ void exchangeData(ProxySocket& sock) {
             logger(DEBUG) << "Sent " << c << "/" << a << " bytes from local to remote";
         }
         inpBuffer[0] = 0;    // To allow sane logging
-        usleep(100000);
-
-        if (failuresIn != 0 || failuresOut != 0) {
-            logger(WARN) << "Failures (input): " << failuresIn;
-            logger(WARN) << "Failures (output): " << failuresOut;
+        if (failuresIn != 0) {
+            logger(WARN, "LTR") << "Input failures: " << failuresIn;
         }
 
-    } while (failuresIn < 10 && failuresOut < 10);
+        usleep(SLEEPT);
+    } while (failuresIn < 10 && remoteToListenerOn == true);
+
+    logger(WARN, "LTR") << "Exiting";
+    listenerToRemoteOn = false;
+}
+
+void exchangeData(ProxySocket& sock) {
+
+    // This socket is HTTP for clients
+    // but PLAIN for the server process
+    // Server process talks to the SSH server
+    // But Client process talks to the evil proxy
+    ProxySocket outsock = ProxySocket(remoteUrl, remotePort,
+                                      mode==CLIENT?HTTP:PLAIN);
+
+    if (mode == CLIENT) {
+        logger(VERB1) << "Receiving hello handshake";
+        outsock.sendHelloMessage();
+        logger(VERB1) << "Received handshake";
+    } else {
+        logger(VERB1) << "Sending hello handshake";
+        sock.receiveHelloMessage();
+        logger(VERB1) << "Sent handshake";
+    }
+
+    remoteToListenerOn = true;
+    listenerToRemoteOn = true;
+
+    static struct connectionSockets context = {
+        sock, outsock
+    };
+
+    logger(VERB1) << "Ready to spawn read-write workers";
+
+    pthread_t thread1, thread2;
+    pthread_attr_t attr;
+
+    pthread_attr_init(&attr);
+    pthread_create(&thread1, &attr, remoteToListener, &context);
+    pthread_create(&thread1, &attr, listenerToRemote, &context);
+
+    pthread_join(thread1, NULL);
+    pthread_join(thread2, NULL);
 }
 
 void printBanner() {
@@ -114,7 +173,6 @@ void printBanner() {
      "By Nishit (http://github.com/nishitm)\n"
      "=================================================\n\n";
 }
-    
 
 int main(int argc, char * argv[]) {
     int portNumber, pid;

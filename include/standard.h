@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include <signal.h>
 #include <dirent.h>
+#include <pthread.h>
 #include <ctime>
 
 #include <sys/types.h>

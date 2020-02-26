@@ -24,7 +24,7 @@ all:
 
 proxy: $(SRCFILES)
 	mkdir -p $(OBJ)
-	$(CC) $(LDFLAGS) -o wotop $(SRCFILES) $(LDLIBS) $(INC)
+	$(CC) $(LDFLAGS) -o wotop $(SRCFILES) $(LDLIBS) $(INC) -lpthread
 
 $(OBJ)/%.o: $(SRC)/%.c
 	mkdir -p $(OBJ)
