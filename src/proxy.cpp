@@ -158,7 +158,7 @@ void exchangeData(ProxySocket& sock) {
 
     pthread_attr_init(&attr);
     pthread_create(&thread1, &attr, remoteToListener, &context);
-    pthread_create(&thread1, &attr, listenerToRemote, &context);
+    pthread_create(&thread2, &attr, listenerToRemote, &context);
 
     pthread_join(thread1, NULL);
     pthread_join(thread2, NULL);
