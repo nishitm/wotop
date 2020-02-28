@@ -137,7 +137,7 @@ int ProxySocket::read(vector<char> &buffer, int from, int& respFrom) {
     bool connectionBroken = false;
     int contentLengthPosition = -1;
 
-    if (protocol == PLAIN || 1) {
+    if (protocol == PLAIN) {
         // Updating reference
         respFrom = from;
 
@@ -148,8 +148,12 @@ int ProxySocket::read(vector<char> &buffer, int from, int& respFrom) {
         // or if many bytes have been read
         // or connection has been broken for long
         while (failures < 50000 && bytesRead < 500) {
+
+            // Don't accept too much data
+            // it has to be written via HTTP
+            // Leave space in buffer for headers
             retval = recv(fd, &buffer[from+bytesRead],
-                        BUFSIZE-from-2-bytesRead, 0);
+                        BUFSIZE-from-2-bytesRead-400, 0);
             if (retval == 0) {
                 connectionBroken = true;
                 failures += 10000;
@@ -200,17 +204,18 @@ int ProxySocket::read(vector<char> &buffer, int from, int& respFrom) {
         // Receive content if connection intact
         if (!connectionBroken && bytesRead > 0) {
             failures = 0;
-            bytesRead = 0;
+            bytesRead = bytesRead - (messageStart - from);;
             messageLength = 0;
 
             // Get Content Length
             for (i=messageStart-1; i>=from; i--) {
-                if (!strcmp(&buffer[i], "Content-Length")) {
+                if (!strncmp(&buffer[i], "Content-Length", 14)) {
                     break;
                 }
             }
 
             if (i < from) {
+                logger(VERB2) << "Did not find Content-Length";
                 return -2;
             }
 
@@ -221,13 +226,20 @@ int ProxySocket::read(vector<char> &buffer, int from, int& respFrom) {
             }
 
             if (i == messageStart) {
+                logger(VERB2) << "Did not find colon";
                 return -2;
             }
 
             for (; i<messageStart; i++) {
-                if (buffer[i] !=' ') {
+                if (buffer[i] !=' ' &&
+                    buffer[i] >= '0' && buffer[i] <= '9') {
                     break;
                 }
+            }
+
+            if (i == messageStart) {
+                logger(VERB2) << "Did not find numerical content length";
+                return -2;
             }
 
             for (; i<messageStart; i++) {
@@ -241,11 +253,14 @@ int ProxySocket::read(vector<char> &buffer, int from, int& respFrom) {
 
             logger(VERB2) << "Content-Length: " << messageLength;
 
+            logger(VERB2) << "Already read " << bytesRead << " out of " << messageLength;
+            failures = 0;
+
             // Read till all bytes have been read
             // or connection has been broken for long
             while (failures < 50000 && bytesRead < messageLength) {
                 retval = recv(fd, &buffer[messageStart+bytesRead],
-                              BUFSIZE-2-bytesRead-messageStart, 0);
+                              messageLength-bytesRead, 0);
                 if (retval == 0) {
                     connectionBroken = true;
                     failures += 10000;
@@ -253,7 +268,7 @@ int ProxySocket::read(vector<char> &buffer, int from, int& respFrom) {
                     connectionBroken = false;
                     failures = 0;
                     bytesRead += retval;
-                    messageLength += retval;
+                    logger(VERB2) << "Have read " << bytesRead << " now";
                 }
             }
 

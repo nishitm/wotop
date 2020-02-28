@@ -4,7 +4,7 @@
 #include "logger.h"
 #include "proxysocket.h"
 
-#define SLEEPT 1
+#define SLEEPT 100000
 
 using namespace std;
 
@@ -127,6 +127,8 @@ void exchangeData(ProxySocket& sock) {
 
     pthread_join(thread1, NULL);
     pthread_join(thread2, NULL);
+
+    usleep(5000000);
 }
 
 void printBanner() {
