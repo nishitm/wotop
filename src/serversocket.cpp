@@ -36,7 +36,7 @@ void ServerSocket::connectToSocket(void (*connectionCallback)(ProxySocket&),
     if (c < 0) return;
     //setNonBlocking(c);
     
-    ProxySocket sock = ProxySocket(c, mode==CLIENT?PLAIN:HTTP);
+    ProxySocket sock = ProxySocket(c, mode==CLIENT?PLAIN:PLAIN);
 
     logger(INFO) << "Connected to client";
 
