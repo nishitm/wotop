@@ -2,7 +2,11 @@
 #include <iostream>
 #include <sstream>
 
+std::mutex logIt::llock;
+std::ostringstream logIt::_buffer;
+
 logIt::logIt(LogLevel l) {
+    llock.lock();
     if(l >= logLevel) {
         _buffer << "[" << logStrings[l] << "] ";
         toPrint = true;
@@ -12,6 +16,7 @@ logIt::logIt(LogLevel l) {
 }
 
 logIt::logIt(LogLevel l, const char *s) {
+    llock.lock();
     if(l >= logLevel) {
         _buffer << "[" << logStrings[l] << "][" << s << "] ";
         toPrint = true;
@@ -25,4 +30,6 @@ logIt::~logIt() {
         _buffer << std::endl;
         std::cout << _buffer.str();
     }
+    _buffer.clear();
+    llock.unlock();
 }
