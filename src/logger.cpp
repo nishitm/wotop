@@ -9,7 +9,7 @@ logIt::logIt(LogLevel l) {
     llock.lock();
     if(l >= logLevel) {
         _buffer << "[" << logStrings[l] << "] ";
-        toPrint = true;
+        toPrint = false;
     } else {
         toPrint = false;
     }
@@ -19,7 +19,7 @@ logIt::logIt(LogLevel l, const char *s) {
     llock.lock();
     if(l >= logLevel) {
         _buffer << "[" << logStrings[l] << "][" << s << "] ";
-        toPrint = true;
+        toPrint = false;
     } else {
         toPrint = false;
     }
@@ -30,6 +30,6 @@ logIt::~logIt() {
         _buffer << std::endl;
         std::cout << _buffer.str();
     }
-    _buffer.clear();
+    _buffer.str("");
     llock.unlock();
 }
