@@ -1,5 +1,5 @@
 CXX = g++ -std=c++11
-CXXFLAGS = -g -Wall -Wextra -Werror -O2
+CXXFLAGS = -g -Wall -Wextra -Wpedantic -Werror -O2
 
 INC=-I./include
 SRC=./src
