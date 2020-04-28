@@ -6,13 +6,10 @@
 #include <mutex>
 
 enum LogLevel { DEBUG, VERB2, VERB1, INFO, WARN, ERROR};
-static const char *logStrings[] =
-    { "DEBUG", "VERB2", "VERB1", "INFO ", "WARN ", "ERROR" };
 
 const LogLevel logLevel = WARN;
 
 class logIt {
-    LogLevel level;
 public:
     logIt(LogLevel l);
     logIt(LogLevel l, const char *s);

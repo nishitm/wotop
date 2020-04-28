@@ -43,7 +43,6 @@ int packetTunnel(struct tunnelContext *context) {
     ProxySocket& readSocket = context->readSocket;
     ProxySocket& writeSocket = context->writeSocket;
     const char* type = context->type;
-    volatile bool& otherHalfRunning = context->sleepOn;
     vector<char>& buffer = context->buffer;
 
     int failures = 0;
@@ -166,7 +165,7 @@ void printBanner() {
 }
 
 int main(int argc, char * argv[]) {
-    int portNumber, pid;
+    int portNumber;
 
     printBanner();
     signal(SIGINT, intHandler);

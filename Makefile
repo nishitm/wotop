@@ -29,7 +29,7 @@ $(OBJ):
 	mkdir -p $(OBJ)
 
 $(OBJ)/%.o: $(SRC)/%.cpp | $(OBJ)
-	$(CXX) $(DEBUG) -c $< -o $@ $(INC)
+	$(CXX) $(CXXFLAGS) $(DEBUG) -c $< -o $@ $(INC)
 
 .PHONY: install
 install: wotop
