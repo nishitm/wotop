@@ -15,7 +15,7 @@ public:
     logIt(LogLevel l, const char *s);
 
     template <typename T>
-    logIt & operator<<(T const & value) {
+    logIt & operator<<(T const & value __attribute__((unused))) {
         // _buffer << value;
         return *this;
     }
