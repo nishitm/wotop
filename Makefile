@@ -1,5 +1,5 @@
-CC=g++ -std=c++11
-CFLAGS= -g -Wall -Werror -O2
+CXX = g++ -std=c++11
+CXXFLAGS = -g -Wall -Werror -O2
 
 INC=-I./include
 SRC=./src
@@ -23,16 +23,13 @@ print-%  : ; @echo $* = $($*)
 all: wotop
 
 wotop: $(OBJFILES)
-	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS) $(INC) -lpthread
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS) $(INC) -lpthread
 
 $(OBJ):
 	mkdir -p $(OBJ)
 
-$(OBJ)/%.o: $(SRC)/%.c | $(OBJ)
-	$(CC) $(DEBUG) -c $< -o $@ $(INC)
-
 $(OBJ)/%.o: $(SRC)/%.cpp | $(OBJ)
-	$(CC) $(DEBUG) -c $< -o $@ $(INC)
+	$(CXX) $(DEBUG) -c $< -o $@ $(INC)
 
 .PHONY: install
 install: wotop
