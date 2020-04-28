@@ -5,6 +5,8 @@ INC=-I./include
 SRC=./src
 OBJ=bin
 
+PREFIX ?= /usr/local
+
 # Available flags:
 # DEBUG: DEBUG outputs from my code
 # DEBUG_PROXY: DEBUG outputs from the request parsing
@@ -13,27 +15,30 @@ OBJ=bin
 DEBUG=
 
 
-SRCFILES=$(addprefix $(OBJ)/, $(subst .c,.o, $(subst .cpp,.o, $(subst $(SRC)/,,$(wildcard $(SRC)/*)))))
+OBJFILES=$(addprefix $(OBJ)/, $(subst .c,.o, $(subst .cpp,.o, $(subst $(SRC)/,,$(wildcard $(SRC)/*)))))
 
 print-%  : ; @echo $* = $($*)
 
-all:
-	make clean
-	mkdir $(OBJ)
-	make proxy
+.PHONY: all
+all: wotop
 
-proxy: $(SRCFILES)
-	mkdir -p $(OBJ)
-	$(CC) $(LDFLAGS) -o wotop $(SRCFILES) $(LDLIBS) $(INC) -lpthread
+wotop: $(OBJFILES)
+	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS) $(INC) -lpthread
 
-$(OBJ)/%.o: $(SRC)/%.c
+$(OBJ):
 	mkdir -p $(OBJ)
+
+$(OBJ)/%.o: $(SRC)/%.c | $(OBJ)
 	$(CC) $(DEBUG) -c $< -o $@ $(INC)
 
-$(OBJ)/%.o: $(SRC)/%.cpp
-	mkdir -p $(OBJ)
+$(OBJ)/%.o: $(SRC)/%.cpp | $(OBJ)
 	$(CC) $(DEBUG) -c $< -o $@ $(INC)
 
+.PHONY: install
+install: wotop
+	install -Dm755 wotop $(DESTDIR)$(PREFIX)/bin/wotop
+
+.PHONY: clean
 clean:
 	rm -rf $(OBJ)
 	rm -f wotop
