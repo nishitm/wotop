@@ -28,7 +28,6 @@ private:
     static std::mutex llock;
 };
 
-#define GET_MACRO(_1,_2,NAME,...) NAME
-#define logger(...) GET_MACRO(__VA_ARGS__, logIt, logIt)(__VA_ARGS__)
+#define logger(...) logIt(__VA_ARGS__)
 
 #endif
