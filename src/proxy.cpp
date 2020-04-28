@@ -16,7 +16,7 @@ Mode mode = CLIENT;
 mutex tlock;
 
 // For closing the sockets safely when Ctrl+C SIGINT is received
-void intHandler(int dummy) {
+void intHandler(int dummy __attribute__((unused))) {
   logger(INFO) << "Closing socket";
   mainSocket.closeSocket();
   exit(0);
@@ -24,7 +24,7 @@ void intHandler(int dummy) {
 
 // To ignore SIGPIPE being carried over to the parent
 // When client closes pipe
-void pipeHandler(int dummy) {
+void pipeHandler(int dummy __attribute__((unused))) {
   logger(INFO) << "Connection closed due to SIGPIPE";
   exit(0);
 }
