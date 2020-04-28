@@ -57,9 +57,9 @@ ProxySocket::ProxySocket(char *host, int port, Protocol _outProto) {
 }
 
 int ProxySocket::write(vector<char> &buffer, int size, int& from) {
-    int bytesWritten;
+    int bytesWritten = 0;
     int headerBytes;
-    int i, retval, failures;
+    int retval, failures;
     bool connectionBroken = false;
     char tmp[200];
 
@@ -133,7 +133,6 @@ int ProxySocket::read(vector<char> &buffer, int from, int& respFrom) {
     int bytesRead = 0;
     int i, retval, failures;
     bool connectionBroken = false;
-    int contentLengthPosition = -1;
 
     if (protocol == PLAIN) {
         // Updating reference

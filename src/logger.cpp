@@ -2,6 +2,9 @@
 #include <iostream>
 #include <sstream>
 
+static const char *logStrings[] =
+    { "DEBUG", "VERB2", "VERB1", "INFO ", "WARN ", "ERROR" };
+
 std::mutex logIt::llock;
 std::ostringstream logIt::_buffer;
 
